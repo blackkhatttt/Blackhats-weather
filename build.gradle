@@ -17,6 +17,9 @@ repositories {
     mavenCentral()
 }
 
+// Keep the metadata template in a separate folder and expand its version placeholders during resource processing.
+sourceSets.main.resources.srcDir('src/main/templates')
+
 neoForge {
     version = project.neo_version
 
