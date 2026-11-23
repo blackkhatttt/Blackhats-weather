@@ -78,7 +78,7 @@ public final class CloudLayerRenderer {
         VertexConsumer consumer = buffers.getBuffer(RenderType.translucent());
         Matrix4f pose = poseStack.last().pose();
 
-        int radius = 2 + Math.min(2, detail / 2);
+        int radius = 1 + detail / 3;
         int centerX = Mth.floor(camera.x / CELL_SIZE);
         int centerZ = Mth.floor(camera.z / CELL_SIZE);
         double drift = level.getGameTime() * (0.0025D + rain * 0.0015D);
@@ -135,9 +135,9 @@ public final class CloudLayerRenderer {
             double x, double z, int detail, int red, int green, int blue,
             int alpha, float rain, float thunder
     ) {
-        int rings = 4 + detail * 2;
-        int sectors = 6 + detail * 3;
-        int puffs = 2 + detail;
+        int rings = 3 + detail;
+        int sectors = 5 + detail * 2;
+        int puffs = 1 + detail / 2;
 
         switch (form) {
             case CIRRUS -> {
