@@ -48,6 +48,20 @@ public final class CloudLayerRenderer {
             ClientLevel level, int ticks, float partialTick, PoseStack poseStack,
             double camX, double camY, double camZ
     ) {
+        if (level == null) return;
+        WeatherQualityProfile profile = WeatherConfig.getQualityProfile();
+        if (profile.hasVolumetricClouds()
+                && VolumetricCloudRenderer.renderClouds(
+                        level, ticks, partialTick, poseStack, camX, camY, camZ, profile)) {
+            return;
+        }
+        renderFallbackClouds(level, ticks, partialTick, poseStack, camX, camY, camZ);
+    }
+
+    private static void renderFallbackClouds(
+            ClientLevel level, int ticks, float partialTick, PoseStack poseStack,
+            double camX, double camY, double camZ
+    ) {
         Minecraft minecraft = Minecraft.getInstance();
         if (level == null || camY > 320.0D || camY < -64.0D) return;
 
