@@ -3,11 +3,19 @@
 Advanced, physically inspired weather simulation for Minecraft Java 1.21.1 using NeoForge.
 
 ## Current version
-- Mod version: 0.8.2
+- Mod version: 0.8.3
 - Minecraft: 1.21.1
 - NeoForge: 21.1.267
 - Java: 21
 - Mod ID: `blackhatsweathers`
+
+## 0.8.3 — Cloud Visual Refinement
+- Increased mesh resolution at every graphics profile to reduce visibly polygonal cloud silhouettes.
+- Added subtle deterministic shape deformation to avoid repetitive perfect ellipsoids.
+- Refined cumulus clusters into broader, more connected cloud masses with softer-looking lobes.
+- Reduced excessive opacity and overlapping-layer intensity to limit harsh bright patches.
+- Refined cirrus wisps, stratus sheets and cumulonimbus towers while preserving their weather-based selection.
+- Graphics profiles still affect rendering detail and range only; weather simulation and cloud formation selection remain independent.
 
 ## 0.8.2 — Untextured Cloud Rendering Fix
 - Replaced the terrain-atlas translucent render type with a dedicated untextured POSITION_COLOR pipeline.
