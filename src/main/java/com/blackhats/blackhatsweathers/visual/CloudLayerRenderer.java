@@ -8,12 +8,8 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 
 import java.util.Random;
@@ -25,7 +21,6 @@ import java.util.Random;
  * Graphics profiles only control mesh detail and the number of rendered
  * cloud components; they never change cloud formation selection.
  */
-@EventBusSubscriber(modid = "blackhatsweathers", value = Dist.CLIENT)
 public final class CloudLayerRenderer {
     private static final int CELL_SIZE = 48;
     private static final double CLOUD_HEIGHT = 188.0D;
@@ -41,47 +36,47 @@ public final class CloudLayerRenderer {
     private CloudLayerRenderer() {
     }
 
-    @SubscribeEvent
-    public static void onRenderLevel(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_SKY) {
-            return;
-        }
-
+    /**
+     * Called by the Overworld DimensionSpecialEffects hook. Returning true from
+     * that hook suppresses vanilla clouds, so this is the only cloud layer.
+     */
+    public static void renderClouds(
+            ClientLevel level, int ticks, float partialTick, PoseStack poseStack,
+            double camX, double camY, double camZ
+    ) {
         Minecraft minecraft = Minecraft.getInstance();
-        Level level = minecraft.level;
-        if (level == null || level.dimension() != Level.OVERWORLD) {
+        if (level == null) {
             return;
         }
 
         // Detail 0 is still rendered: it is the absolute-minimum PC preset.
         int detail = Mth.clamp(WeatherConfig.getQualityProfile().getCloudDetail(), 0, 5);
-        float rain = level.getRainLevel(0.0F);
-        float thunder = level.getThunderLevel(0.0F);
-        Vec3 camera = event.getCamera().getPosition();
+        float rain = level.getRainLevel(partialTick);
+        float thunder = level.getThunderLevel(partialTick);
 
-        if (camera.y > 252.0D || camera.y < 35.0D) {
+        // Keep the custom layer active at every altitude where the sky is visible.
+        if (camY > 320.0D || camY < -64.0D) {
             return;
         }
 
         float cover = Mth.clamp(
                 0.38F + rain * 0.39F + thunder * 0.20F
-                        + (float) Math.sin(camera.x * 0.0011D + camera.z * 0.0015D
+                        + (float) Math.sin(camX * 0.0011D + camZ * 0.0015D
                         + level.getDayTime() * 0.00002D) * 0.13F,
                 0.12F, 0.98F);
         float opacity = Mth.clamp(0.60F + rain * 0.25F + thunder * 0.18F, 0.45F, 1.0F);
 
-        PoseStack poseStack = event.getPoseStack();
         poseStack.pushPose();
-        poseStack.translate(-camera.x, -camera.y, -camera.z);
+        poseStack.translate(-camX, -camY, -camZ);
 
         var buffers = minecraft.renderBuffers().bufferSource();
         VertexConsumer consumer = buffers.getBuffer(RenderType.translucent());
         Matrix4f pose = poseStack.last().pose();
 
         int radius = 1 + detail / 3;
-        int centerX = Mth.floor(camera.x / CELL_SIZE);
-        int centerZ = Mth.floor(camera.z / CELL_SIZE);
-        double drift = level.getGameTime() * (0.0025D + rain * 0.0015D);
+        int centerX = Mth.floor(camX / CELL_SIZE);
+        int centerZ = Mth.floor(camZ / CELL_SIZE);
+        double drift = (ticks + partialTick) * (0.0025D + rain * 0.0015D);
 
         // Same weather conditions choose the same formations at every quality.
         CloudForm dominantForm = chooseDominantForm(rain, thunder);
