@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 @Mod(BlackhatsWeathers.MOD_ID)
 public final class BlackhatsWeathers {
     public static final String MOD_ID = "blackhatsweathers";
-    public static final String VERSION = "0.3.0";
+    public static final String VERSION = "0.4.0";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public BlackhatsWeathers(ModContainer modContainer) {
