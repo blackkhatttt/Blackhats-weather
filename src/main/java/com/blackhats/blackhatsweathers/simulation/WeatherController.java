@@ -74,8 +74,7 @@ public final class WeatherController {
         boolean thundering = type.hasThunder();
         int clearTime = raining ? 0 : duration;
         int rainTime = raining ? duration : 0;
-        int thunderTime = thundering ? duration : 0;
-        level.setWeatherParameters(clearTime, rainTime, thunderTime, raining, thundering);
+        level.setWeatherParameters(clearTime, rainTime, raining, thundering);
     }
 
     private static final class DimensionWeather {
