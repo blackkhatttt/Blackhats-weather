@@ -19,11 +19,11 @@ import org.joml.Matrix4f;
 import java.util.Random;
 
 /**
- * Advanced cloud formation pass.
+ * Dynamic layered cloud pass.
  *
- * Builds deterministic, layered cloud clusters from translucent horizontal
- * cards. Thunder intensity adds taller, denser formations. This is a visual
- * approximation, not a volumetric fluid simulation.
+ * Cloud fields are deterministic and vary gradually by region and world time.
+ * Native rain and thunder intensify coverage and darkening. This remains a
+ * lightweight visual approximation, not a volumetric cloud simulation.
  */
 @EventBusSubscriber(modid = "blackhatsweathers", value = Dist.CLIENT)
 public final class CloudLayerRenderer {
@@ -52,21 +52,24 @@ public final class CloudLayerRenderer {
         }
 
         float rain = level.getRainLevel(0.0F);
-        if (rain < 0.035F) {
-            return;
-        }
-
         float thunder = level.getThunderLevel(0.0F);
-        float coverage = Mth.clamp(0.24F + rain * 0.58F + thunder * 0.18F, 0.0F, 0.97F);
-        float opacity = Mth.clamp(rain * (0.34F + thunder * 0.38F), 0.0F, 1.0F);
-        if (opacity <= 0.01F) {
-            return;
-        }
-
         Vec3 camera = event.getCamera().getPosition();
         if (camera.y >= CLOUD_BASE_HEIGHT + 24.0D) {
             return;
         }
+
+        // Slowly varying regional cloud fields keep clouds visible in fair weather.
+        double worldPhase = level.getDayTime() * 0.000025D;
+        double regionalWave = Math.sin(camera.x * 0.0017D + camera.z * 0.0011D
+                + worldPhase) * 0.5D
+                + Math.sin(camera.x * 0.0007D - camera.z * 0.0019D
+                - worldPhase * 0.63D) * 0.5D;
+        float cloudCover = Mth.clamp(
+                0.28F + (float) regionalWave * 0.16F + rain * 0.43F + thunder * 0.18F,
+                0.10F, 0.98F);
+        float opacity = Mth.clamp(
+                0.42F + rain * 0.40F + thunder * 0.25F,
+                0.25F, 1.0F);
 
         PoseStack poseStack = event.getPoseStack();
         poseStack.pushPose();
@@ -79,7 +82,7 @@ public final class CloudLayerRenderer {
         int radius = 2 + detail;
         int centerX = Mth.floor(camera.x / CELL_SIZE);
         int centerZ = Mth.floor(camera.z / CELL_SIZE);
-        double drift = event.getRenderTick() * (0.004D + thunder * 0.002D);
+        double drift = level.getGameTime() * (0.004D + thunder * 0.002D);
 
         float shade = Mth.clamp(1.0F - thunder * 0.34F - rain * 0.13F, 0.48F, 1.0F);
         int red = Mth.clamp((int) (239.0F * shade), 0, 255);
@@ -91,14 +94,16 @@ public final class CloudLayerRenderer {
                 long seed = ((long) gx * 341873128712L) ^ ((long) gz * 132897987541L);
                 Random random = new Random(seed);
 
-                if (random.nextFloat() > coverage) {
+                // Each region has a stable cloud pattern; cover changes gradually over time.
+                float regionalVariation = 0.82F + random.nextFloat() * 0.36F;
+                if (random.nextFloat() > cloudCover * regionalVariation) {
                     continue;
                 }
 
                 double cellX = gx * (double) CELL_SIZE + CELL_SIZE * 0.5D - drift;
                 double cellZ = gz * (double) CELL_SIZE + CELL_SIZE * 0.5D + drift * 0.38D;
 
-                // Broad lower deck: overlapping puffs create an irregular edge.
+                // Broad lower deck with irregular overlapping cloud puffs.
                 int lowerPuffs = 2 + detail;
                 for (int i = 0; i < lowerPuffs; i++) {
                     double x = cellX + (random.nextDouble() - 0.5D) * 25.0D;
@@ -106,12 +111,12 @@ public final class CloudLayerRenderer {
                     float width = 17.0F + random.nextFloat() * (9.0F + detail * 2.0F);
                     float depth = 13.0F + random.nextFloat() * (8.0F + detail);
                     double y = CLOUD_BASE_HEIGHT + random.nextDouble() * 1.8D;
-                    int alpha = cloudAlpha(random, opacity, 0.72F, 1.0F);
+                    int alpha = cloudAlpha(random, opacity, 0.62F, 1.0F);
                     drawCloudQuad(consumer, pose, x, y, z, width, depth,
                             red, green, blue, alpha);
                 }
 
-                // Upper layers become more pronounced as thunder increases.
+                // Convective weather builds taller, denser upper formations.
                 int upperLayers = 1 + (int) Math.ceil(thunder * (1.0F + detail * 0.8F));
                 for (int layer = 0; layer < upperLayers; layer++) {
                     int puffs = 1 + detail / 2;
@@ -144,17 +149,8 @@ public final class CloudLayerRenderer {
     }
 
     private static void drawCloudQuad(
-            VertexConsumer consumer,
-            Matrix4f pose,
-            double x,
-            double y,
-            double z,
-            float width,
-            float depth,
-            int red,
-            int green,
-            int blue,
-            int alpha
+            VertexConsumer consumer, Matrix4f pose, double x, double y, double z,
+            float width, float depth, int red, int green, int blue, int alpha
     ) {
         float left = (float) (x - width * 0.5F);
         float right = (float) (x + width * 0.5F);
@@ -169,15 +165,8 @@ public final class CloudLayerRenderer {
     }
 
     private static void addVertex(
-            VertexConsumer consumer,
-            Matrix4f pose,
-            float x,
-            float y,
-            float z,
-            int red,
-            int green,
-            int blue,
-            int alpha
+            VertexConsumer consumer, Matrix4f pose, float x, float y, float z,
+            int red, int green, int blue, int alpha
     ) {
         consumer.addVertex(pose, x, y, z)
                 .setColor(red, green, blue, alpha)
