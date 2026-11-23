@@ -3,11 +3,19 @@
 Advanced, physically inspired weather simulation for Minecraft Java 1.21.1 using NeoForge.
 
 ## Current version
-- Mod version: 0.7.0
+- Mod version: 0.8.0
 - Minecraft: 1.21.1
 - NeoForge: 21.1.267
 - Java: 21
 - Mod ID: `blackhatsweathers`
+
+## 0.8.0 — Real Cloud Morphology
+- Replaced flat cloud cards with procedural, shaded 3D ellipsoid meshes.
+- Added distinct visual formations: high thin cirrus wisps, rounded cumulus heaps, broad stratus sheets, and towering cumulonimbus with a spreading anvil.
+- Weather conditions select the cloud formation; all graphics profiles render the same formations for the same conditions.
+- The six graphics profiles scale mesh resolution, component count and render distance only.
+- PLAYING IN A MOLECULE OF OXYGEN is the absolute-minimum rendering profile and still displays every cloud formation in simplified geometry.
+- Cloud rendering is a procedural 3D visual approximation, not a physically simulated volumetric atmosphere.
 
 ## 0.7.0 — Dynamic Cloud Fields
 - Custom cloud formations are now visible during fair weather, not only during rain.
