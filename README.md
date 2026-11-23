@@ -3,11 +3,17 @@
 Advanced, physically inspired weather simulation for Minecraft Java 1.21.1 using NeoForge.
 
 ## Current version
-- Mod version: 0.8.1
+- Mod version: 0.8.2
 - Minecraft: 1.21.1
 - NeoForge: 21.1.267
 - Java: 21
 - Mod ID: `blackhatsweathers`
+
+## 0.8.2 — Untextured Cloud Rendering Fix
+- Replaced the terrain-atlas translucent render type with a dedicated untextured POSITION_COLOR pipeline.
+- Uses translucent blending, depth testing, two-sided geometry and color-only writes so procedural cloud meshes do not depend on block-atlas UV sampling.
+- Preserves the 3D cirrus, cumulus, stratus and cumulonimbus formations and all six graphics profiles.
+- No changes to server-side weather simulation.
 
 ## 0.8.1 — Real Cloud Morphology
 - Replaced flat cloud cards with procedural, shaded 3D ellipsoid meshes.
