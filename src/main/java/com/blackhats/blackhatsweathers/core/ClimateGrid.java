@@ -36,12 +36,15 @@ public final class ClimateGrid {
     private AtmosphericCell createInitialCell(int gridX, int gridZ) {
         long seed = worldSeed ^ (((long) gridX) * 341873128712L) ^ (((long) gridZ) * 132897987541L);
         SplittableRandom random = new SplittableRandom(seed);
-        double temperature = 12.0 + random.nextDouble() * 18.0;
-        double humidity = 0.25 + random.nextDouble() * 0.55;
-        double pressure = 990.0 + random.nextDouble() * 35.0;
+
+        // Broad starting ranges allow both warm-season storms and cold precipitation.
+        double temperature = -8.0 + random.nextDouble() * 40.0;
+        double humidity = 0.30 + random.nextDouble() * 0.68;
+        double pressure = 980.0 + random.nextDouble() * 45.0;
         double windSpeed = random.nextDouble() * 8.0;
         double windDirection = random.nextDouble() * 360.0;
-        double instability = random.nextDouble() * 0.35;
+        double instability = random.nextDouble() * 0.45;
+
         return new AtmosphericCell(temperature, humidity, pressure, windSpeed, windDirection, instability);
     }
 
