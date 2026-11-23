@@ -19,18 +19,17 @@ import org.joml.Matrix4f;
 import java.util.Random;
 
 /**
- * First custom cloud-layer pass.
+ * Advanced cloud formation pass.
  *
- * The renderer is client-only and deliberately independent from the
- * server-side atmospheric simulation. It draws deterministic, drifting
- * cloud patches during precipitation. These are layered cloud cards,
- * not volumetric clouds.
+ * Builds deterministic, layered cloud clusters from translucent horizontal
+ * cards. Thunder intensity adds taller, denser formations. This is a visual
+ * approximation, not a volumetric fluid simulation.
  */
 @EventBusSubscriber(modid = "blackhatsweathers", value = Dist.CLIENT)
 public final class CloudLayerRenderer {
-    private static final double CLOUD_HEIGHT = 192.0D;
+    private static final double CLOUD_BASE_HEIGHT = 190.0D;
     private static final int CELL_SIZE = 32;
-    private static final float MAX_ALPHA = 118.0F;
+    private static final float MAX_ALPHA = 112.0F;
 
     private CloudLayerRenderer() {
     }
@@ -47,8 +46,7 @@ public final class CloudLayerRenderer {
             return;
         }
 
-        WeatherQualityProfile profile = WeatherConfig.getQualityProfile();
-        int detail = profile.getCloudDetail();
+        int detail = WeatherConfig.getQualityProfile().getCloudDetail();
         if (detail <= 0) {
             return;
         }
@@ -59,14 +57,14 @@ public final class CloudLayerRenderer {
         }
 
         float thunder = level.getThunderLevel(0.0F);
-        float cover = Mth.clamp(0.28F + rain * 0.54F + thunder * 0.18F, 0.0F, 0.96F);
-        float alphaScale = Mth.clamp(rain * (0.38F + thunder * 0.42F), 0.0F, 1.0F);
-        if (alphaScale <= 0.01F) {
+        float coverage = Mth.clamp(0.24F + rain * 0.58F + thunder * 0.18F, 0.0F, 0.97F);
+        float opacity = Mth.clamp(rain * (0.34F + thunder * 0.38F), 0.0F, 1.0F);
+        if (opacity <= 0.01F) {
             return;
         }
 
         Vec3 camera = event.getCamera().getPosition();
-        if (camera.y >= CLOUD_HEIGHT - 3.0D) {
+        if (camera.y >= CLOUD_BASE_HEIGHT + 24.0D) {
             return;
         }
 
@@ -74,7 +72,6 @@ public final class CloudLayerRenderer {
         poseStack.pushPose();
         poseStack.translate(-camera.x, -camera.y, -camera.z);
 
-        Minecraft.getInstance().renderBuffers().bufferSource();
         var buffers = minecraft.renderBuffers().bufferSource();
         VertexConsumer consumer = buffers.getBuffer(RenderType.translucent());
         Matrix4f pose = poseStack.last().pose();
@@ -82,43 +79,68 @@ public final class CloudLayerRenderer {
         int radius = 2 + detail;
         int centerX = Mth.floor(camera.x / CELL_SIZE);
         int centerZ = Mth.floor(camera.z / CELL_SIZE);
-        double drift = event.getRenderTick() * 0.006D;
+        double drift = event.getRenderTick() * (0.004D + thunder * 0.002D);
 
-        float stormShade = 1.0F - thunder * 0.30F - rain * 0.12F;
-        int red = Mth.clamp((int) (238.0F * stormShade), 0, 255);
-        int green = Mth.clamp((int) (242.0F * stormShade), 0, 255);
-        int blue = Mth.clamp((int) (248.0F * stormShade), 0, 255);
+        float shade = Mth.clamp(1.0F - thunder * 0.34F - rain * 0.13F, 0.48F, 1.0F);
+        int red = Mth.clamp((int) (239.0F * shade), 0, 255);
+        int green = Mth.clamp((int) (243.0F * shade), 0, 255);
+        int blue = Mth.clamp((int) (250.0F * shade), 0, 255);
 
         for (int gx = centerX - radius; gx <= centerX + radius; gx++) {
             for (int gz = centerZ - radius; gz <= centerZ + radius; gz++) {
                 long seed = ((long) gx * 341873128712L) ^ ((long) gz * 132897987541L);
                 Random random = new Random(seed);
 
-                if (random.nextFloat() > cover) {
+                if (random.nextFloat() > coverage) {
                     continue;
                 }
 
-                double baseX = gx * (double) CELL_SIZE + CELL_SIZE * 0.5D - drift;
-                double baseZ = gz * (double) CELL_SIZE + CELL_SIZE * 0.5D + drift * 0.42D;
-                int puffs = 1 + Math.max(1, detail / 2);
+                double cellX = gx * (double) CELL_SIZE + CELL_SIZE * 0.5D - drift;
+                double cellZ = gz * (double) CELL_SIZE + CELL_SIZE * 0.5D + drift * 0.38D;
 
-                for (int puff = 0; puff < puffs; puff++) {
-                    double offsetX = (random.nextDouble() - 0.5D) * 20.0D;
-                    double offsetZ = (random.nextDouble() - 0.5D) * 20.0D;
-                    float width = 15.0F + random.nextFloat() * (8.0F + detail * 2.0F);
-                    float depth = 12.0F + random.nextFloat() * (7.0F + detail);
-                    double y = CLOUD_HEIGHT + puff * 0.035D + random.nextDouble() * 0.025D;
-                    int alpha = Mth.clamp((int) (MAX_ALPHA * alphaScale * (0.72F + random.nextFloat() * 0.28F)), 0, 150);
+                // Broad lower deck: overlapping puffs create an irregular edge.
+                int lowerPuffs = 2 + detail;
+                for (int i = 0; i < lowerPuffs; i++) {
+                    double x = cellX + (random.nextDouble() - 0.5D) * 25.0D;
+                    double z = cellZ + (random.nextDouble() - 0.5D) * 25.0D;
+                    float width = 17.0F + random.nextFloat() * (9.0F + detail * 2.0F);
+                    float depth = 13.0F + random.nextFloat() * (8.0F + detail);
+                    double y = CLOUD_BASE_HEIGHT + random.nextDouble() * 1.8D;
+                    int alpha = cloudAlpha(random, opacity, 0.72F, 1.0F);
+                    drawCloudQuad(consumer, pose, x, y, z, width, depth,
+                            red, green, blue, alpha);
+                }
 
-                    drawCloudQuad(consumer, pose,
-                            baseX + offsetX, y, baseZ + offsetZ,
-                            width, depth, red, green, blue, alpha);
+                // Upper layers become more pronounced as thunder increases.
+                int upperLayers = 1 + (int) Math.ceil(thunder * (1.0F + detail * 0.8F));
+                for (int layer = 0; layer < upperLayers; layer++) {
+                    int puffs = 1 + detail / 2;
+                    for (int i = 0; i < puffs; i++) {
+                        double x = cellX + (random.nextDouble() - 0.5D) * (18.0D + layer * 3.0D);
+                        double z = cellZ + (random.nextDouble() - 0.5D) * (18.0D + layer * 3.0D);
+                        float scale = 0.78F + random.nextFloat() * 0.42F;
+                        float width = (14.0F + random.nextFloat() * 12.0F) * scale;
+                        float depth = (11.0F + random.nextFloat() * 9.0F) * scale;
+                        double y = CLOUD_BASE_HEIGHT + 2.0D + layer * (2.5D + thunder * 2.0D)
+                                + random.nextDouble() * 1.2D;
+                        int alpha = cloudAlpha(random, opacity, 0.48F, 0.78F);
+                        int layerRed = Mth.clamp((int) (red * (1.0F - layer * 0.035F)), 0, 255);
+                        int layerGreen = Mth.clamp((int) (green * (1.0F - layer * 0.035F)), 0, 255);
+                        int layerBlue = Mth.clamp((int) (blue * (1.0F - layer * 0.025F)), 0, 255);
+                        drawCloudQuad(consumer, pose, x, y, z, width, depth,
+                                layerRed, layerGreen, layerBlue, alpha);
+                    }
                 }
             }
         }
 
         poseStack.popPose();
         buffers.endBatch(RenderType.translucent());
+    }
+
+    private static int cloudAlpha(Random random, float opacity, float minScale, float maxScale) {
+        float variation = minScale + random.nextFloat() * (maxScale - minScale);
+        return Mth.clamp((int) (MAX_ALPHA * opacity * variation), 0, 145);
     }
 
     private static void drawCloudQuad(
@@ -140,10 +162,10 @@ public final class CloudLayerRenderer {
         float back = (float) (z + depth * 0.5F);
         float height = (float) y;
 
-        addVertex(consumer, pose, left, height, front, 0.0F, 0.0F, red, green, blue, alpha);
-        addVertex(consumer, pose, left, height, back, 0.0F, 1.0F, red, green, blue, alpha);
-        addVertex(consumer, pose, right, height, back, 1.0F, 1.0F, red, green, blue, alpha);
-        addVertex(consumer, pose, right, height, front, 1.0F, 0.0F, red, green, blue, alpha);
+        addVertex(consumer, pose, left, height, front, red, green, blue, alpha);
+        addVertex(consumer, pose, left, height, back, red, green, blue, alpha);
+        addVertex(consumer, pose, right, height, back, red, green, blue, alpha);
+        addVertex(consumer, pose, right, height, front, red, green, blue, alpha);
     }
 
     private static void addVertex(
@@ -152,8 +174,6 @@ public final class CloudLayerRenderer {
             float x,
             float y,
             float z,
-            float u,
-            float v,
             int red,
             int green,
             int blue,
@@ -161,7 +181,7 @@ public final class CloudLayerRenderer {
     ) {
         consumer.addVertex(pose, x, y, z)
                 .setColor(red, green, blue, alpha)
-                .setUv(u, v)
+                .setUv(0.0F, 0.0F)
                 .setOverlay(OverlayTexture.NO_OVERLAY)
                 .setLight(LightTexture.FULL_BRIGHT)
                 .setNormal(0.0F, 1.0F, 0.0F);
