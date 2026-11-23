@@ -9,7 +9,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 import java.util.Random;
