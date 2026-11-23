@@ -3,11 +3,21 @@
 Advanced, physically inspired weather simulation for Minecraft Java 1.21.1 using NeoForge.
 
 ## Current version
-- Mod version: 0.6.0
+- Mod version: 0.7.0
 - Minecraft: 1.21.1
 - NeoForge: 21.1.267
 - Java: 21
 - Mod ID: `blackhatsweathers`
+
+## 0.7.0 — Dynamic Cloud Fields
+- Custom cloud formations are now visible during fair weather, not only during rain.
+- Cloud coverage changes gradually with world time and regional position.
+- Deterministic regional patterns create more varied skies while keeping cloud placement stable.
+- Rain and thunder increase cloud coverage, opacity and darkening.
+- Thunderstorms continue to create taller, denser upper cloud layers.
+- Cloud detail follows the selected graphics profile.
+- Rendering remains a lightweight layered-card approximation, not volumetric clouds.
+- Cloud cover is currently a visual estimate based on regional/time patterns and vanilla precipitation; it is not yet directly driven by synchronized humidity or pressure values.
 
 ## 0.6.0 — Atmospheric Dynamics
 - Reworked atmospheric evolution around slowly changing pressure systems.
