@@ -27,12 +27,13 @@ public final class AtmosphericFogRenderer {
             return;
         }
 
-        float rain = minecraft.level.getRainLevel(event.getPartialTick());
+        float partialTick = (float) event.getPartialTick();
+        float rain = minecraft.level.getRainLevel(partialTick);
         if (rain <= 0.01F) {
             return;
         }
 
-        float thunder = minecraft.level.getThunderLevel(event.getPartialTick());
+        float thunder = minecraft.level.getThunderLevel(partialTick);
         float quality = getAtmosphereQuality();
         float intensity = Mth.clamp(rain * (0.16F + thunder * 0.22F) * quality, 0.0F, 0.42F);
 
@@ -51,12 +52,13 @@ public final class AtmosphericFogRenderer {
             return;
         }
 
-        float rain = minecraft.level.getRainLevel(event.getPartialTick());
+        float partialTick = (float) event.getPartialTick();
+        float rain = minecraft.level.getRainLevel(partialTick);
         if (rain <= 0.01F) {
             return;
         }
 
-        float thunder = minecraft.level.getThunderLevel(event.getPartialTick());
+        float thunder = minecraft.level.getThunderLevel(partialTick);
         float quality = getAtmosphereQuality();
         float visibilityFactor = Mth.clamp(
                 1.0F - rain * (0.16F + thunder * 0.12F) * quality,
