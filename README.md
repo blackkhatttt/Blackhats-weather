@@ -3,20 +3,29 @@
 Advanced, physically inspired weather simulation for Minecraft Java 1.21.1 using NeoForge.
 
 ## Current version
-- Mod version: 0.4.0
+- Mod version: 0.5.0
 - Minecraft: 1.21.1
 - NeoForge: 21.1.267
 - Java: 21
 - Mod ID: `blackhatsweathers`
 
-## 0.4.0 — Cloud Rendering System (First Pass)
-This milestone introduces the first custom cloud rendering layer:
-- Client-side cloud patches are rendered during precipitation in the Overworld.
-- Cloud coverage and opacity respond to rain and thunder intensity.
-- Cloud patches drift slowly and are deterministic around the player, avoiding per-frame random regeneration.
+## 0.5.0 — Advanced Cloud Formation
+This milestone expands the first custom cloud renderer:
+- Builds irregular cloud clusters from overlapping translucent cloud patches.
+- Adds multiple cloud layers at different heights.
+- Thunder intensity increases the number and vertical separation of upper cloud layers.
+- Cloud coverage, opacity and shading continue to respond to rain and thunder.
+- Cloud movement remains deterministic and gradual around the camera.
 - Cloud detail follows the selected graphics profile.
-- The renderer uses layered translucent cloud cards; these are not volumetric clouds and do not replace Minecraft's complete vanilla cloud system.
-- The cloud renderer is client-only and does not alter server-side weather simulation.
+- This is a layered-card visual approximation, not true volumetric cloud rendering.
+- The renderer is client-only and does not alter server-side weather simulation.
+
+## 0.4.0 — Cloud Rendering System (First Pass)
+- Introduced the first custom cloud layer in the Overworld during precipitation.
+- Cloud coverage and opacity respond to rain and thunder.
+- Cloud patches drift slowly and use deterministic regional seeds.
+- Cloud detail follows the selected graphics profile.
+- Uses translucent cloud cards; it does not replace Minecraft's complete vanilla cloud system.
 
 ## 0.3.0 — Atmospheric Visual Engine (First Pass)
 - Rain and thunderstorms tint the existing biome fog toward a cool grey atmosphere.
