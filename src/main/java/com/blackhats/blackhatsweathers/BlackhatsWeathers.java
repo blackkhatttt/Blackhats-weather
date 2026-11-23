@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 @Mod(BlackhatsWeathers.MOD_ID)
 public final class BlackhatsWeathers {
     public static final String MOD_ID = "blackhatsweathers";
-    public static final String VERSION = "0.2.0";
+    public static final String VERSION = "0.3.0";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public BlackhatsWeathers(ModContainer modContainer) {
@@ -26,6 +26,6 @@ public final class BlackhatsWeathers {
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        LOGGER.info("BLACKHATS WEATHERS dynamic weather systems are ready.");
+        LOGGER.info("BLACKHATS WEATHERS atmospheric visual systems are ready.");
     }
 }
