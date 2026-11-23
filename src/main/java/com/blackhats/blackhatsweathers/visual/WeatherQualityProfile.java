@@ -4,9 +4,9 @@ import java.util.Locale;
 
 public enum WeatherQualityProfile {
     PLAYING_IN_A_MOLECULE_OF_OXYGEN("PLAYING IN A MOLECULE OF OXYGEN", 0, 0, 0, false, false),
-    POTATO("POTATO", 1, 1, 1, false, false),
-    BAD_QUALITY("BAD QUALITY", 2, 2, 2, false, false),
-    MEDIUM("MEDIUM", 3, 3, 3, false, false),
+    POTATO("POTATO", 1, 1, 1, true, false),
+    BAD_QUALITY("BAD QUALITY", 2, 2, 2, true, false),
+    MEDIUM("MEDIUM", 3, 3, 3, true, false),
     HIGH("HIGH", 4, 4, 4, true, true),
     CINEMATOGRAPHIC("CINEMATOGRAPHIC", 5, 5, 5, true, true);
 
@@ -50,6 +50,18 @@ public enum WeatherQualityProfile {
 
     public boolean hasAdvancedLighting() {
         return advancedLighting;
+    }
+
+    /** Number of view-ray samples used by the volumetric cloud shader. */
+    public int getVolumetricSteps() {
+        return switch (this) {
+            case PLAYING_IN_A_MOLECULE_OF_OXYGEN -> 0;
+            case POTATO -> 8;
+            case BAD_QUALITY -> 14;
+            case MEDIUM -> 22;
+            case HIGH -> 36;
+            case CINEMATOGRAPHIC -> 52;
+        };
     }
 
     public static WeatherQualityProfile fromConfigName(String name) {

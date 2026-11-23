@@ -3,11 +3,20 @@
 Advanced, physically inspired weather simulation for Minecraft Java 1.21.1 using NeoForge.
 
 ## Current version
-- Mod version: 0.8.3
+- Mod version: 0.9.0
 - Minecraft: 1.21.1
 - NeoForge: 21.1.267
 - Java: 21
 - Mod ID: `blackhatsweathers`
+
+## 0.9.0 — Volumetric Cloud Engine
+- Added an original procedural 3D density field rendered with a view-ray integration shader.
+- Cloud silhouettes are generated from layered 3D value noise and detail erosion rather than stacked ellipsoid meshes.
+- Rain and thunder influence coverage, vertical development and cloud shading.
+- The six graphics profiles share the same volumetric cloud system except PLAYING IN A MOLECULE OF OXYGEN, which retains the lightweight mesh fallback.
+- Volumetric ray steps scale from POTATO through CINEMATOGRAPHIC; advanced lighting is reserved for HIGH and CINEMATOGRAPHIC.
+- The previous procedural mesh renderer remains available as a fallback if the shader is unavailable.
+- This is a real-time visual approximation, not a full physical fluid or atmospheric simulation.
 
 ## 0.8.3 — Cloud Visual Refinement
 - Increased mesh resolution at every graphics profile to reduce visibly polygonal cloud silhouettes.
