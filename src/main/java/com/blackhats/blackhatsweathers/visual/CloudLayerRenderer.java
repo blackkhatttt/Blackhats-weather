@@ -4,9 +4,10 @@ import com.blackhats.blackhatsweathers.config.WeatherConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.util.Mth;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.joml.Matrix4f;
@@ -24,6 +25,28 @@ public final class CloudLayerRenderer {
     private static final int CELL_SIZE = 48;
     private static final double CLOUD_HEIGHT = 188.0D;
     private static final float BASE_ALPHA = 166.0F;
+
+    /**
+     * Untextured translucent pipeline. The previous terrain translucent layer
+     * sampled the block atlas, which is not suitable for procedural vertex-only
+     * clouds and could make the custom layer disappear.
+     */
+    private static final RenderType CLOUD_RENDER_TYPE = RenderType.create(
+            "blackhatsweathers:procedural_clouds",
+            DefaultVertexFormat.POSITION_COLOR,
+            VertexFormat.Mode.TRIANGLES,
+            262144,
+            false,
+            false,
+            RenderType.CompositeState.builder()
+                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setTextureState(RenderStateShard.NO_TEXTURE)
+                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
+                    .setCullState(RenderStateShard.NO_CULL)
+                    .setWriteMaskState(RenderStateShard.COLOR_WRITE)
+                    .createCompositeState(false)
+    );
 
     private enum CloudForm {
         CIRRUS,
@@ -69,7 +92,7 @@ public final class CloudLayerRenderer {
         poseStack.translate(-camX, -camY, -camZ);
 
         var buffers = minecraft.renderBuffers().bufferSource();
-        VertexConsumer consumer = buffers.getBuffer(RenderType.translucent());
+        VertexConsumer consumer = buffers.getBuffer(CLOUD_RENDER_TYPE);
         Matrix4f pose = poseStack.last().pose();
 
         int radius = 1 + detail / 3;
@@ -111,7 +134,7 @@ public final class CloudLayerRenderer {
         }
 
         poseStack.popPose();
-        buffers.endBatch(RenderType.translucent());
+        buffers.endBatch(CLOUD_RENDER_TYPE);
     }
 
     private static CloudForm chooseDominantForm(float rain, float thunder) {
@@ -275,10 +298,6 @@ public final class CloudLayerRenderer {
                         Mth.clamp((int) (red * light), 0, 255),
                         Mth.clamp((int) (green * light), 0, 255),
                         Mth.clamp((int) (blue * light), 0, 255),
-                        alpha)
-                .setUv(0.0F, 0.0F)
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(LightTexture.FULL_BRIGHT)
-                .setNormal(nx, ny, nz);
+                        alpha);
     }
 }
